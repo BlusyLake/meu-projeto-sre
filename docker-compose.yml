@@ -33,9 +33,7 @@ services:
       - redis-data:/data
 
   sre-app:
-    build: 
-      context: ./app
-      dockerfile: Dockerfile
+    image: ${DOCKER_USER}/sre-app:latest
     restart: always
     environment:
       - REDIS_ADDR=redis:6379 

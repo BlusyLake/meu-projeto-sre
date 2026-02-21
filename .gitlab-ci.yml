@@ -3,25 +3,33 @@ stages:
   - deploy
 
 variables:
-  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-  LATEST_TAG: $CI_REGISTRY_IMAGE:latest
+  # Roteamento alterado para o Docker Hub (Storage Externo)
+  # O nome da imagem será: seunome/sre-app:hash-do-commit
+  IMAGE_TAG: $DOCKER_USER/sre-app:$CI_COMMIT_SHORT_SHA
+  LATEST_TAG: $DOCKER_USER/sre-app:latest
 
+# ==========================================
+# STAGE 1: COMPILAÇÃO E EMPACOTAMENTO
+# ==========================================
 build_image:
   stage: build
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
   before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
   script:
     - cd app
     - docker build -t $IMAGE_TAG -t $LATEST_TAG .
+    # Empurra para a nuvem pública
     - docker push $IMAGE_TAG
     - docker push $LATEST_TAG
   only:
     - main 
 
-
+# ==========================================
+# STAGE 2: ENTREGA CONTÍNUA (DEPLOY)
+# ==========================================
 deploy_vps_oracle:
   stage: deploy
   image: alpine:latest
@@ -34,16 +42,13 @@ deploy_vps_oracle:
     - ssh-keyscan $VPS_IP >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
   script:
-    
     - ssh $VPS_USER@$VPS_IP "mkdir -p /opt/sre-app"
-    
-    
     - scp ./docker-compose.yml $VPS_USER@$VPS_IP:/opt/sre-app/docker-compose.yml
     
+    - ssh $VPS_USER@$VPS_IP "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USER --password-stdin"
     
-    - ssh $VPS_USER@$VPS_IP "echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY"
-    
-    
-    - ssh $VPS_USER@$VPS_IP "cd /opt/sre-app && docker-compose pull sre-app && docker-compose up -d --no-deps sre-app"
+    # O Pulo do Gato: Injetamos a variável DOCKER_USER no momento da execução na VPS
+    # Assim o docker-compose sabe exatamente qual "pasta" procurar no Docker Hub
+    - ssh $VPS_USER@$VPS_IP "cd /opt/sre-app && export DOCKER_USER=$DOCKER_USER && docker-compose pull sre-app && docker-compose up -d --no-deps sre-app"
   only:
-    - main 
+    - main
