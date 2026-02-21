@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRE Resilient App | Vitrine Técnica</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darker: '#0f172a',
+                        dark: '#1e293b',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-darker text-gray-200 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-3xl w-full">
+       
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">
+                Resilient Web App
+            </h1>
+            <p class="text-gray-400">Ambiente de Testes SRE / Alta Disponibilidade</p>
+        </div>
+
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            
+            
+            <div class="bg-dark p-6 rounded-xl border border-gray-700 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4">
+                    <span class="flex h-3 w-3 relative">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                    </span>
+                </div>
+                <h2 class="text-sm uppercase tracking-wider text-gray-400 mb-1">Host / Container ID</h2>
+                <p class="text-2xl font-mono text-blue-300">{{.Hostname}}</p>
+                <p class="text-xs text-gray-500 mt-4">Prova visual do balanceamento de carga (Load Balancer).</p>
+            </div>
+
+
+            <div class="bg-dark p-6 rounded-xl border border-gray-700 shadow-lg">
+                <h2 class="text-sm uppercase tracking-wider text-gray-400 mb-1">Redis Cache (Contador)</h2>
+                
+                <div class="flex items-end gap-3 mb-2">
+                    <p class="text-4xl font-bold text-white">{{.Visits}}</p>
+                    <span class="text-sm text-gray-400 mb-1">requisições totais</span>
+                </div>
+                
+                {{if .RedisIsDown}}
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-900/50 text-red-400 text-xs font-medium border border-red-800">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+                        {{.RedisStatus}}
+                    </div>
+                {{else}}
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-900/50 text-emerald-400 text-xs font-medium border border-emerald-800">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+                        {{.RedisStatus}}
+                    </div>
+                {{end}}
+            </div>
+        </div>
+
+        <div class="bg-dark p-6 rounded-xl border border-gray-700 shadow-lg">
+            <h2 class="text-lg font-semibold text-white mb-4">Painel de Estresse (Chaos Engineering)</h2>
+            <p class="text-sm text-gray-400 mb-6">
+                Como um SRE, você não apenas reza para a aplicação funcionar. Você testa a quebra dela. Clique no botão abaixo para gerar picos de latência ou erros 500 propositais. Assista os gráficos do Prometheus/Grafana reagirem.
+            </p>
+            
+            <div class="flex flex-wrap gap-4">
+                <a href="/chaos" target="_blank" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-red-900/20">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                    Injetar Caos (Latência/500)
+                </a>
+                
+                <a href="/metrics" target="_blank" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center gap-2 border border-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    Ver Raw Metrics
+                </a>
+
+                <button onclick="window.location.reload()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors ml-auto">
+                    Refresh Page
+                </button>
+            </div>
+        </div>
+
+        <div class="text-center mt-8 text-xs text-gray-600 font-mono">
+            Último processamento: {{.LastPingTime}} | Desenvolvido por Edi (SRE Mode)
+        </div>
+    </div>
+</body>
+</html>

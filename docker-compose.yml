@@ -1,0 +1,49 @@
+version: '3.8'
+
+networks:
+  sre-net:
+    driver: bridge
+
+volumes:
+  redis-data:
+
+services:
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - sre-net
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      - sre-net
+    volumes:
+      - redis-data:/data
+
+  sre-app:
+    build: 
+      context: ./app
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - REDIS_ADDR=redis:6379 
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sre-app.rule=Host(`localhost`)"
+      - "traefik.http.services.sre-app.loadbalancer.server.port=8080"
+    networks:
+      - sre-net
+    depends_on:
+      - redis
