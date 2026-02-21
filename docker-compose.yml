@@ -35,12 +35,14 @@ services:
   sre-app:
     image: ${DOCKER_USER}/sre-app:latest
     restart: always
+    deploy:
+      replicas: 3
     environment:
       - REDIS_ADDR=redis:6379 
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sre-app.rule=Host(`localhost`)"
-      - "traefik.http.services.sre-app.loadbalancer.server.port=8080"
+      - "traefik.http.routers.sre-app.rule=PathPrefix(`/`)"
+      - "traefik.http.services.sre-app.loadbalancer.server.port=3000"
     networks:
       - sre-net
     depends_on:

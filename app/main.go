@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"runtime"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -44,11 +45,14 @@ func init() {
 // --- 2. ESTRUTURA DE DADOS PARA O FRONTEND ---
 // O que vamos mandar para o nosso HTML renderizar
 type PageData struct {
-	Hostname     string
-	Visits       string
-	RedisStatus  string
-	RedisIsDown  bool
-	LastPingTime string
+	Hostname       string
+	Visits         string
+	RedisStatus    string
+	RedisIsDown    bool
+	LastPingTime   string
+	OSArchitecture string
+	GoVersion      string
+	CPUCores       int
 }
 
 // Cliente global do Redis
@@ -111,11 +115,14 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Prepara os dados pro HTML
 	data := PageData{
-		Hostname:     hostname,
-		Visits:       visits,
-		RedisStatus:  redisStatus,
-		RedisIsDown:  redisIsDown,
-		LastPingTime: time.Now().Format("15:04:05.000"),
+		Hostname:       hostname,
+		Visits:         visits,
+		RedisStatus:    redisStatus,
+		RedisIsDown:    redisIsDown,
+		LastPingTime:   time.Now().Format("15:04:05.000"),
+		OSArchitecture: runtime.GOOS + " / " + runtime.GOARCH,
+		GoVersion:      runtime.Version(),
+		CPUCores:       runtime.NumCPU(),
 	}
 
 	// Renderiza o HTML
