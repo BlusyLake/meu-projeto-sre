@@ -2,7 +2,6 @@
 
 Este repositório contém um **caso de estudo** focado em ciclos de desenvolvimento DevOps, com ênfase na observabilidade. O objetivo é demonstrar práticas de integração entre aplicação, infraestrutura, monitoramento e dashboards, utilizando uma arquitetura simples para facilitar o aprendizado.
 
-> ⚠️ Nenhum comentário interno foi mantido nos diretórios ou arquivos; a estrutura apresentada é enxuta e profissional.
 
 ---
 
