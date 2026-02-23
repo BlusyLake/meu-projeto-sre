@@ -1,111 +1,109 @@
-# SRE com CI/CD e Auto-Deploy
+# Projeto SRE - Estudo de Caso DevOps com Observabilidade
 
-Projeto de estudos para entender na prática como funciona um workflow completo de CI/CD com auto-deployment via webhooks.
+Este repositório contém um **caso de estudo** focado em ciclos de desenvolvimento DevOps, com ênfase na observabilidade. O objetivo é demonstrar práticas de integração entre aplicação, infraestrutura, monitoramento e dashboards, utilizando uma arquitetura simples para facilitar o aprendizado.
 
-## O que faz
+> ⚠️ Nenhum comentário interno foi mantido nos diretórios ou arquivos; a estrutura apresentada é enxuta e profissional.
 
-Basicamente você faz um commit no código, a pipeline testa e builda automaticamente, dispara um webhook pra sua VPS, e a aplicação fica online com a nova versão. Tudo automático.
+---
 
-```
-git push → GitLab Pipeline → Webhook → VPS → Deploy
-```
+## 🔍 Visão Geral
 
-## Arquitetura
+O projeto é composto por:
 
-A aplicação é uma API em Go que roda em 3 instâncias (replicas) em produção. Traefik faz o load balancing entre elas, Redis fica como cache compartilhado.
+- **app/**: código da aplicação Go (serviço HTTP simples) junto com templates para páginas web.
+- **infra/**: configuração de infraestrutura para monitoramento (Prometheus, Grafana) em `docker-compose` separado.
+- **docker-compose.yml**: orquestração geral para executar a aplicação e dependências.
+- **prometheus.yml**: configuração principal do Prometheus.
 
-- **Traefik**: Load balancer + Reverse proxy
-- **App Go**: 3 replicas da aplicação
-- **Redis**: Cache/session store
-- **Prometheus**: Métricas de performance
+A intenção é executar os dois ambientes (aplicação e monitoramento) localmente, observando métricas, logs e criando dashboards para análises.
 
-Tudo rodando em Docker Compose pra fácil gestão.
+---
 
-## Como funciona o deploy
-
-1. Você faz commit e push pro main
-2. GitLab roda a pipeline (build, test, segurança)
-3. Após sucesso, dispara webhook HTTP pra VPS
-4. Servidor recebe webhook e valida assinatura (HMAC-SHA256)
-5. Faz git pull da nova versão
-6. Docker-compose pull e inicia nova versão
-7. Health check verifica se tá tudo ok
-8. Pronto, app atualizada com zero downtime
-
-Tudo isso leva uns 5-10 minutos dependendo do tamanho.
-
-## Estrutura
+## 🧱 Estrutura de Diretórios
 
 ```
-.
-├── README.md                  (este arquivo)
-├── docker-compose.yml         (orquestra tudo)
-├── .env                       (variáveis de ambiente)
-│
-└── app/
-    ├── main.go                (aplicação Go)
-    ├── go.mod                 (dependências)
-    ├── Dockerfile             (build da imagem)
-    └── templates/
+/ (root do repositório)
+├── docker-compose.yml          # Compose principal (app + serviços)
+├── prometheus.yml              # Configuração de Prometheus
+├── README.md                   # Este documento
+├── app/                        # Código da aplicação
+    ├── Dockerfile
+    ├── go.mod
+    ├── main.go
+    └── templates/              # Views HTML
+        ├── dashboard.html
         └── index.html
-```
-
-## Executar localmente
-
-```bash
-git clone https://github.com/seu-usuario/meu-projeto-sre.git
-cd meu-projeto-sre
-
-docker-compose up -d
-```
-
-Acesso:
-- Aplicação: http://localhost
-- Traefik Dashboard: http://localhost:8080
-- Métricas: http://localhost/metrics
-
-```bash
-# Ver logs
-docker-compose logs -f sre-app
-
-# Parar
-docker-compose down
-```
-
-## Monitoramento
-
-A app expõe métricas em `/metrics`:
 
 ```
-http_requests_total           (total de requisições)
-http_request_duration_seconds (latência)
-redis_connections            (conexões ativas)
-```
 
-Pode integrar com Grafana pra visualizar melhor.
+---
 
-## Segurança
+## 🚀 Executando o Projeto
 
-- Webhook é assinado com HMAC-SHA256
-- Secrets em variáveis de ambiente
-- Health checks verificam se app tá saudável
-- Containers isolados em rede Docker
+O projeto foi pensado para rodar com **Docker Compose**. Siga os passos abaixo:
 
-## Por que fiz isso
+1. **Pré-requisitos**
+   - Docker e Docker Compose instalados.
+   - Portas 8080, 9090 e 3000 livres.
 
-Pra entender na prática:
+2. **Iniciar a aplicação + serviços**
+   ```bash
+   docker-compose up --build
+   ```
 
-- Containerização com Docker
-- Orquestração com Docker Compose
-- CI/CD automático
-- Auto-deployment via webhooks
-- Load balancing
-- Cache com Redis
-- Métricas com Prometheus
-- Alta disponibilidade
+3. **Catalogar endpoints**
+   - Aplicação: `http://localhost:8080`
+   - Prometheus: `http://localhost:9090`
 
-Basicamente como as coisas funcionam em produção real.
+4. Para iniciar apenas o ambiente de monitoramento:
+   ```bash
+   cd infra && docker-compose up
+   ```
 
-## Licença
+---
 
-MIT
+## 🛠 Tecnologias Utilizadas
+
+- **Go** – serviço web simples com métricas expostas para Prometheus.
+- **Docker / Docker Compose** – containerização e orquestração.
+- **Prometheus** – coleta de métricas.
+
+---
+
+## 📈 Observabilidade & DevOps
+
+Este caso de estudo aborda os seguintes pontos:
+
+1. **Instrumentação** da aplicação para expor métricas de desempenho.
+2. **Configuração** de coleta de métricas via Prometheus.
+3. **Criação de dashboards** no Grafana usando dados reais.
+4. **Ciclos de desenvolvimento** típicos:
+   - Build local via `docker-compose`.
+   - Adição de novas métricas ou alterações de código.
+   - Teste de integração com o stack de monitoramento.
+   - Feedback através de dashboards e logs.
+
+A ideia é permitir que engenheiros pratiquem commits, builds e deploys locais enquanto observam impactos em métricas e visualizações.
+
+---
+
+## 📄 Licença
+
+Este projeto está disponível sob a **licença MIT**. Sinta-se à vontade para clonar, modificar e aprender.
+
+---
+
+## 💡 Como usar este repositório
+
+1. **Clone** o repositório publicamente.
+2. Explore a estrutura de diretórios e arquivos.
+3. Modifique ou estenda a aplicação para adicionar métricas ou funcionalidades.
+4. Ajuste as configurações de Prometheus/Grafana para ganhar mais insights.
+
+> Este repositório serve como base para workshops, estudos e demonstrações sobre práticas modernas de DevOps e observabilidade.
+
+---
+
+Se tiver dúvidas ou quiser contribuir, sinta-se livre para abrir issues ou pull requests.
+
+> _Boa exploração!_ 👩‍💻👨‍💻

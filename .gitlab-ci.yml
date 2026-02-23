@@ -1,0 +1,53 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  IMAGE_TAG: $DOCKER_USER/sre-app:$CI_COMMIT_SHORT_SHA
+  LATEST_TAG: $DOCKER_USER/sre-app:latest
+  DOCKER_HOST: tcp://docker:2375 
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
+
+# ==========================================
+# STAGE 1: COMPILAÇÃO E EMPACOTAMENTO
+# ==========================================
+build_image:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USER" --password-stdin
+  script:
+    - cp .gitlab-ci.yml app/pipeline-copy.yml
+    - cd app
+    - docker build --build-arg CI_USER="$GITLAB_USER_NAME" -t $IMAGE_TAG -t $LATEST_TAG .
+    - docker push $IMAGE_TAG
+    - docker push $LATEST_TAG
+  only:
+    - main 
+
+# ==========================================
+# STAGE 2: ENTREGA CONTÍNUA (DEPLOY)
+# ==========================================
+deploy_vps_oracle:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - 'command -v ssh-agent >/dev/null || ( apk add --update openssh )'
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $VPS_IP >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - ssh $VPS_USER@$VPS_IP "mkdir -p ~/sre-app"
+    - scp ./docker-compose.yml $VPS_USER@$VPS_IP:~/sre-app/docker-compose.yml
+    - scp ./prometheus.yml $VPS_USER@$VPS_IP:~/sre-app/prometheus.yml
+    - ssh $VPS_USER@$VPS_IP "echo $DOCKER_PASSWORD | sudo docker login -u $DOCKER_USER --password-stdin"
+    - ssh $VPS_USER@$VPS_IP "cd ~/sre-app && export DOCKER_USER=$DOCKER_USER && sudo -E docker-compose pull && sudo -E docker-compose up -d"
+    - ssh $VPS_USER@$VPS_IP "sudo docker image prune -f"
+  only:
+    - main

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SRE | Network Operations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = { 
+            darkMode: 'class', 
+            theme: { 
+                extend: { 
+                    colors: { bgBase: '#09090b', panel: '#18181b', borderMuted: '#27272a', brand: '#ED145B' },
+                    fontFamily: { mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'] }
+                } 
+            } 
+        }
+    </script>
+    <style>
+        body { background: #09090b; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #09090b; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-bgBase text-gray-200 font-mono min-h-screen p-4 md:p-8 selection:bg-brand selection:text-white">
+
+    <div class="max-w-7xl mx-auto w-full">
+        <!-- HEADER -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b border-borderMuted pb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                    <span class="w-2 h-8 bg-brand rounded-sm shadow-[0_0_8px_rgba(237,20,91,0.6)]"></span>
+                    Central NOC
+                </h1>
+                <p class="text-xs text-gray-500 mt-2 tracking-widest uppercase">Monitoramento Contínuo L7 (Tráfego) e L4 (cAdvisor/Hardware)</p>
+            </div>
+            <div class="flex gap-4 mt-6 md:mt-0">
+                <button onclick="triggerChaos()" id="chaosBtn" class="px-6 py-2 bg-brand hover:bg-[#c00e47] text-white text-xs font-bold rounded-lg transition-transform transform hover:-translate-y-0.5 flex items-center gap-2 shadow-lg shadow-brand/30">
+                    <span id="chaosSpinner" class="hidden animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></span>
+                    ⚙️ INJETAR ESTRESSE E ERROS 500
+                </button>
+                <a href="/" class="px-6 py-2 bg-panel hover:bg-borderMuted border border-borderMuted text-white text-xs font-bold rounded-lg transition-colors flex items-center">
+                    VOLTAR À NAVE
+                </a>
+            </div>
+        </div>
+
+        <!-- INDICADOR DE STATUS GERAL -->
+        <div class="flex gap-4 mb-6">
+            <div class="bg-emerald-900/20 border border-emerald-800/50 px-4 py-2 rounded-lg flex items-center gap-2">
+                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span class="text-xs text-emerald-400 font-bold tracking-widest">TRÁFEGO BACKGROUND: ATIVO</span>
+            </div>
+            <div class="bg-blue-900/20 border border-blue-800/50 px-4 py-2 rounded-lg flex items-center gap-2">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                <span class="text-xs text-blue-400 font-bold tracking-widest">cADVISOR HOOKED</span>
+            </div>
+        </div>
+
+        <!-- CHARTS SECTION -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- RPS Chart -->
+            <div class="bg-panel border border-borderMuted rounded-xl p-6 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Tráfego HTTP Global (Req/s)</h2>
+                    <span class="text-[10px] text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">Camada L7</span>
+                </div>
+                <div class="relative h-[280px] w-full">
+                    <canvas id="rpsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- CPU Chart -->
+            <div class="bg-panel border border-borderMuted rounded-xl p-6 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Exaustão de CPU (% por Container)</h2>
+                    <span class="text-[10px] text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded border border-blue-400/20">Scanner L4</span>
+                </div>
+                <div class="relative h-[280px] w-full">
+                    <canvas id="cpuChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- INFRASTRUCTURE GRID -->
+        <div class="bg-panel border border-borderMuted border-t-4 border-t-brand rounded-xl p-6 shadow-xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Diagnóstico de Nós do Cluster</h2>
+            </div>
+            <div id="infraGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-4 border border-borderMuted border-dashed rounded-lg text-gray-500 text-xs text-center col-span-3 py-10">
+                    Aguardando sincronia com o Time Series Database...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- O MÁQUINÁRIO DE LÓGICA -->
+    <script>
+        const prometheusBase = window.location.hostname.includes('localhost') ? 'http://localhost:9090' : '/prometheus';
+
+        Chart.defaults.color = '#71717a';
+        Chart.defaults.font.family = 'ui-monospace, SFMono-Regular, Menlo, monospace';
+        Chart.defaults.font.size = 10;
+        
+        const commonOptions = {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
+            scales: { 
+                y: { beginAtZero: true, grid: { color: '#27272a' }, border: { display: false } }, 
+                x: { grid: { display: false } } 
+            },
+            interaction: { mode: 'nearest', axis: 'x', intersect: false },
+            animation: { duration: 0 }, 
+            elements: { point: { radius: 0 }, line: { tension: 0.2 } } // Tensão leve, design profissional
+        };
+
+        const rpsCtx = document.getElementById('rpsChart').getContext('2d');
+        const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+
+        const rpsChart = new Chart(rpsCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [
+                { label: 'HTTP 200 (Sucesso)', borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', data: [], fill: true, borderWidth: 2 },
+                { label: 'HTTP 500 (Caos Injetado)', borderColor: '#ED145B', backgroundColor: 'rgba(237, 20, 91, 0.1)', data: [], fill: true, borderWidth: 2 }
+            ]},
+            options: commonOptions
+        });
+
+        const cpuChart = new Chart(cpuCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'CPU Total %', borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', data: [], fill: true, borderWidth: 2 }] },
+            options: commonOptions
+        });
+
+        // O Botão de Caos (Estressa a API e gera 500s de propósito)
+        function triggerChaos() {
+            const btn = document.getElementById('chaosBtn');
+            const spinner = document.getElementById('chaosSpinner');
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            spinner.classList.remove('hidden');
+            
+            // Dispara rajada violenta
+            for(let i=0; i<40; i++){ fetch('/chaos').catch(()=>{}); }
+            
+            setTimeout(() => { 
+                btn.classList.remove('opacity-50', 'cursor-not-allowed'); 
+                spinner.classList.add('hidden'); 
+            }, 3000);
+        }
+
+        async function fetchTelemetry() {
+            try {
+                const now = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+                
+                // 1. RPS (Tráfego de Borda)
+                const resRps = await fetch(`${prometheusBase}/api/v1/query?query=sum(rate(http_requests_total[15s])) by (status)`);
+                const dataRps = await resRps.json();
+                let v200 = 0, v500 = 0;
+                if(dataRps.data && dataRps.data.result) {
+                    dataRps.data.result.forEach(m => {
+                        if (m.metric.status === "200") v200 = parseFloat(m.value[1]);
+                        if (m.metric.status === "500") v500 = parseFloat(m.value[1]);
+                    });
+                }
+                updateChart(rpsChart, now, v200, v500);
+
+                // 2. CPU (Leitura Bruta do cAdvisor)
+                const resCpu = await fetch(`${prometheusBase}/api/v1/query?query=sum(rate(container_cpu_usage_seconds_total{name=~".*sre-app.*"}[15s])) * 100`);
+                const dataCpu = await resCpu.json();
+                let cpuUsage = 0;
+                if(dataCpu.data && dataCpu.data.result.length > 0) cpuUsage = parseFloat(dataCpu.data.result[0].value[1]);
+                updateChart(cpuChart, now, cpuUsage);
+
+                // 3. Grid de Instâncias Lógicas (Usando container_id gerado pelo próprio App Go)
+                const resGrid = await fetch(`${prometheusBase}/api/v1/query?query=sum(rate(http_requests_total[15s])) by (container_id)`);
+                const dataGrid = await resGrid.json();
+                const gridEl = document.getElementById('infraGrid');
+                
+                if(dataGrid.data && dataGrid.data.result.length > 0) {
+                    gridEl.innerHTML = '';
+                    dataGrid.data.result.forEach(m => {
+                        const rps = parseFloat(m.value[1]).toFixed(2);
+                        let cid = m.metric.container_id ? m.metric.container_id.substring(0,8) : "DOWN";
+                        
+                        let statusColor = rps > 10 ? 'text-brand' : 'text-emerald-400';
+                        let boxShadow = rps > 10 ? 'shadow-[0_0_15px_rgba(237,20,91,0.2)] border-brand/50' : 'border-borderMuted';
+                        
+                        gridEl.innerHTML += `
+                            <div class="p-5 bg-bgBase border ${boxShadow} rounded-lg flex justify-between items-center transition-all duration-300">
+                                <div>
+                                    <div class="text-[10px] text-gray-500 font-bold tracking-widest mb-1">ID_${cid}</div>
+                                    <div class="text-2xl text-white font-bold">${rps} <span class="text-[10px] text-gray-500 font-normal">Req/s</span></div>
+                                </div>
+                                <div class="flex flex-col items-end gap-2">
+                                    <span class="text-[9px] ${statusColor} border border-current px-2 py-0.5 rounded uppercase font-bold tracking-widest">Ativo</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (e) {}
+        }
+
+        function updateChart(chart, label, val1, val2 = null) {
+            if (chart.data.labels.length > 30) { 
+                chart.data.labels.shift(); 
+                chart.data.datasets[0].data.shift(); 
+                if(val2 !== null) chart.data.datasets[1].data.shift(); 
+            }
+            chart.data.labels.push(label); 
+            chart.data.datasets[0].data.push(val1); 
+            if(val2 !== null) chart.data.datasets[1].data.push(val2);
+            chart.update();
+        }
+
+        // Radar SRE atualizando a cada 2 segundos
+        setInterval(fetchTelemetry, 2000);
+        fetchTelemetry();
+    </script>
+</body>
+</html>

@@ -6,6 +6,7 @@ networks:
 
 volumes:
   redis-data:
+  prometheus-data:
 
 services:
   traefik:
@@ -17,7 +18,7 @@ services:
       - "--entrypoints.web.address=:80"
     ports:
       - "80:80"
-      - "8080:8080"
+      - "8081:8081"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
@@ -32,6 +33,43 @@ services:
     volumes:
       - redis-data:/data
 
+ 
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    restart: always
+    user: root
+    ports:
+      - "9090:9090" 
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.route-prefix=/prometheus'
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`vps.blusy.com.br`) && PathPrefix(`/prometheus`)"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+    networks:
+      - sre-net
+
+ 
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    restart: always
+    ports:
+      - "8080:8080" 
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/snap/docker/common/var-lib-docker/:/var/lib/docker:ro
+    networks:
+      - sre-net
+
   sre-app:
     image: ${DOCKER_USER}/sre-app:latest
     restart: always
@@ -41,7 +79,7 @@ services:
       - REDIS_ADDR=redis:6379 
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sre-app.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.sre-app.rule=Host(`vps.blusy.com.br`)"
       - "traefik.http.services.sre-app.loadbalancer.server.port=3000"
     networks:
       - sre-net

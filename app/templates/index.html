@@ -3,119 +3,327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SRE Resilient App | Vitrine Técnica</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+    <title>SRE Resilient App | Produção</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        darker: '#0f172a',
-                        dark: '#1e293b',
-                    }
-                }
-            }
+        tailwind.config = { 
+            darkMode: 'class', 
+            theme: { 
+                extend: { 
+                    colors: { 
+                        bgBase: '#09090b', panel: '#18181b', borderMuted: '#27272a', textMain: '#e4e4e7', textMuted: '#a1a1aa',
+                        brand: '#ED145B', brandDark: '#a10b3d'
+                    },
+                    fontFamily: { mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'], sans: ['Inter', 'system-ui', 'sans-serif'] }
+                } 
+            } 
         }
     </script>
+    <style>
+        body { background: linear-gradient(180deg, #09090b 0%, #0c0c0e 100%); }
+        .data-flow { stroke-dasharray: 4; animation: march 1.5s linear infinite; }
+        .data-flow-fast { stroke-dasharray: 4; animation: march 0.8s linear infinite; }
+        @keyframes march { to { stroke-dashoffset: -8; } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #09090b; }
+        ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ED145B; }
+        .border-brand-top { border-top: 3px solid #ED145B; }
+    </style>
 </head>
-<body class="bg-darker text-gray-200 font-sans min-h-screen flex items-center justify-center p-4">
+<body class="text-textMain font-sans min-h-screen flex flex-col items-center p-4 md:p-8 selection:bg-brand selection:text-white">
 
-    <div class="max-w-3xl w-full">
-       
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-2">
-                Resilient Web App
-            </h1>
-            <p class="text-gray-400">Ambiente de Testes SRE / Alta Disponibilidade</p>
-        </div>
-
+    <div class="w-full max-w-6xl flex flex-col items-center min-h-screen">
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <header class="w-full mb-10 mt-2 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-borderMuted pb-6">
+            <div>
+                <h1 class="text-4xl font-bold tracking-tight text-white mb-1 flex items-center gap-3">
+                    <span class="w-3 h-8 bg-brand rounded-sm shadow-[0_0_10px_rgba(237,20,91,0.5)]"></span>
+                    Arquitetura SRE & CI/CD
+                </h1>
+                <p class="text-textMuted font-mono text-xs tracking-widest uppercase mt-2">
+                    Datacenter Oracle // Cluster HA L7 // Automação Zero-Downtime
+                </p>
+            </div>
+            <div class="flex items-center gap-3 bg-panel px-4 py-2 rounded-full border border-borderMuted shadow-md">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs font-mono text-emerald-400">Sistema Operacional</span>
+            </div>
+        </header>
+
+        <!-- DIAGRAMA DA ESTEIRA -->
+        <section class="bg-panel w-full rounded-xl border border-borderMuted border-brand-top p-6 md:p-8 mb-8 shadow-2xl shadow-black/50">
+            <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                <h2 class="text-xs font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                    <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Topologia e Fluxo de Entrega
+                </h2>
+                <p class="text-xs text-textMuted font-mono max-w-md text-right leading-relaxed">
+                    Pipeline declarativa orquestrando compilação isolada, empacotamento no registry e injeção a quente no Load Balancer sem queda de SLA.
+                </p>
+            </div>
             
-            <div class="bg-dark p-6 rounded-xl border border-gray-700 shadow-lg relative overflow-hidden">
-                <div class="absolute top-0 right-0 p-4">
-                    <span class="flex h-3 w-3 relative">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                    </span>
-                </div>
-                <h2 class="text-sm uppercase tracking-wider text-gray-400 mb-1">Host / Container ID</h2>
-                <p class="text-2xl font-mono text-blue-300">{{.Hostname}}</p>
-                <p class="text-xs text-gray-500 mt-4">Prova visual do balanceamento de carga (Load Balancer).</p>
-            </div>
+            <div class="w-full flex justify-center overflow-hidden">
+                <!-- SVG Mágico Totalmente Responsivo -->
+                <svg class="w-full h-auto max-w-[1000px]" viewBox="0 0 1000 420" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <marker id="arrowGray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#71717a" /></marker>
+                        <marker id="arrowBrand" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ED145B" /></marker>
+                        <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" /></marker>
+                        <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" /></marker>
+                    </defs>
 
-            <div class="bg-dark p-6 rounded-xl border border-gray-700 shadow-lg">
-                <h2 class="text-sm uppercase tracking-wider text-gray-400 mb-1">Redis Cache (Contador)</h2>
-                
-                <div class="flex items-end gap-3 mb-2">
-                    <p class="text-4xl font-bold text-white">{{.Visits}}</p>
-                    <span class="text-sm text-gray-400 mb-1">requisições totais</span>
+                    <rect x="20" y="150" width="960" height="260" rx="8" fill="#09090b" stroke="#27272a" stroke-dasharray="4"/>
+                    <image href="https://upload.wikimedia.org/wikipedia/commons/5/50/Oracle_logo.svg" x="40" y="165" width="60" height="18" opacity="0.6"/>
+                    <text x="110" y="178" fill="#a1a1aa" font-size="12" font-family="sans-serif" font-weight="600">Oracle Cloud Infrastructure (VPC)</text>
+                    <text x="800" y="178" fill="#a1a1aa" font-size="10" font-family="monospace" text-anchor="middle">Instance: VPS ARM/AMD</text>
+
+                    <rect x="190" y="200" width="770" height="190" rx="6" fill="#18181b" stroke="#27272a"/>
+                    <text x="205" y="218" fill="#71717a" font-size="10" font-family="monospace">Docker Swarm / Compose Subnet (sre-net)</text>
+
+                    <!-- Pipeline CI/CD -->
+                    <g transform="translate(40, 20)">
+                        <rect width="90" height="80" rx="8" fill="#18181b" stroke="#27272a"/>
+                        <image href="https://cdn.simpleicons.org/git" x="30" y="15" width="30" height="30"/>
+                        <text x="45" y="65" fill="#e4e4e7" font-size="11" font-family="sans-serif" font-weight="bold" text-anchor="middle">Localhost</text>
+                    </g>
+                    
+                    <g transform="translate(290, 20)">
+                        <rect width="180" height="80" rx="8" fill="#18181b" stroke="#ED145B" stroke-width="1.5"/>
+                        <image href="https://cdn.simpleicons.org/gitlab" x="75" y="10" width="30" height="30"/>
+                        <text x="90" y="55" fill="#ED145B" font-size="11" font-family="sans-serif" font-weight="bold" text-anchor="middle">GitLab CI/CD</text>
+                        <text x="90" y="70" fill="#a1a1aa" font-size="9" font-family="monospace" text-anchor="middle">Runner: docker:dind</text>
+                    </g>
+                    
+                    <g transform="translate(630, 20)">
+                        <rect width="160" height="80" rx="8" fill="#18181b" stroke="#27272a"/>
+                        <image href="https://cdn.simpleicons.org/docker" x="65" y="10" width="30" height="30"/>
+                        <text x="80" y="55" fill="#3b82f6" font-size="11" font-family="sans-serif" font-weight="bold" text-anchor="middle">Registry Hub</text>
+                        <text x="80" y="70" fill="#a1a1aa" font-size="9" font-family="monospace" text-anchor="middle">Img: sre-app:$SHA</text>
+                    </g>
+
+                    <path d="M 130 60 L 280 60" fill="none" stroke="#71717a" stroke-width="2" class="data-flow" marker-end="url(#arrowGray)"/>
+                    <text x="210" y="50" fill="#a1a1aa" font-size="10" font-family="monospace" text-anchor="middle">git push</text>
+
+                    <path d="M 470 60 L 620 60" fill="none" stroke="#71717a" stroke-width="2" class="data-flow" marker-end="url(#arrowGray)"/>
+                    <text x="545" y="44" fill="#a1a1aa" font-size="10" font-family="monospace" text-anchor="middle">docker build &</text>
+                    <text x="545" y="56" fill="#a1a1aa" font-size="10" font-family="monospace" text-anchor="middle">push $IMAGE_TAG</text>
+
+                    <path d="M 380 100 L 380 160" fill="none" stroke="#ED145B" stroke-width="2" class="data-flow-fast" marker-end="url(#arrowBrand)"/>
+                    <rect x="295" y="115" width="170" height="20" fill="#09090b"/>
+                    <text x="380" y="129" fill="#ED145B" font-size="10" font-weight="bold" font-family="monospace" text-anchor="middle">SSH DEPLOY (Orchestrator)</text>
+
+                    <path d="M 750 100 L 750 230" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrowBlue)"/>
+                    <rect x="700" y="145" width="100" height="20" fill="#09090b"/>
+                    <text x="750" y="159" fill="#3b82f6" font-size="10" font-weight="bold" font-family="monospace" text-anchor="middle">PULL IMAGE</text>
+
+                    <!-- Camada de Tráfego L7 -->
+                    <g transform="translate(40, 240)">
+                        <rect width="90" height="40" rx="6" fill="#18181b" stroke="#27272a"/>
+                        <text x="45" y="24" fill="#a1a1aa" font-size="11" font-family="sans-serif" font-weight="bold" text-anchor="middle">Internet</text>
+                    </g>
+                    
+                    <g transform="translate(220, 240)">
+                        <rect width="130" height="40" rx="6" fill="#09090b" stroke="#10b981" stroke-width="2"/>
+                        <text x="65" y="24" fill="#10b981" font-size="11" font-family="sans-serif" font-weight="bold" text-anchor="middle">Traefik Edge L7</text>
+                    </g>
+
+                    <path d="M 130 260 L 210 260" fill="none" stroke="#10b981" stroke-width="2.5" class="data-flow-fast" marker-end="url(#arrowGreen)"/>
+                    <text x="170" y="252" fill="#10b981" font-size="10" font-family="sans-serif" font-weight="bold" text-anchor="middle">Porta 80</text>
+
+                    <path d="M 350 260 C 390 260, 390 220, 420 220 L 875 220" fill="none" stroke="#10b981" stroke-width="1.5" class="data-flow-fast"/>
+                    <path d="M 485 220 L 485 240" fill="none" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+                    <path d="M 680 220 L 680 240" fill="none" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+                    <path d="M 875 220 L 875 240" fill="none" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrowGreen)"/>
+
+                    <g transform="translate(420, 250)">
+                        <rect width="130" height="45" rx="6" fill="#27272a" stroke="#3f3f46"/>
+                        <image href="https://cdn.simpleicons.org/docker" x="12" y="12" width="20" height="20"/>
+                        <text x="45" y="23" fill="#e4e4e7" font-size="11" font-weight="bold" font-family="sans-serif">SRE App 01</text>
+                        <text x="45" y="36" fill="#a1a1aa" font-size="9" font-family="monospace">Go Payload</text>
+                    </g>
+                    
+                    <g transform="translate(615, 250)">
+                        <rect width="130" height="45" rx="6" fill="#27272a" stroke="#3f3f46"/>
+                        <image href="https://cdn.simpleicons.org/docker" x="12" y="12" width="20" height="20"/>
+                        <text x="45" y="23" fill="#e4e4e7" font-size="11" font-weight="bold" font-family="sans-serif">SRE App 02</text>
+                        <text x="45" y="36" fill="#a1a1aa" font-size="9" font-family="monospace">Go Payload</text>
+                    </g>
+
+                    <g transform="translate(810, 250)">
+                        <rect width="130" height="45" rx="6" fill="#27272a" stroke="#3f3f46"/>
+                        <image href="https://cdn.simpleicons.org/docker" x="12" y="12" width="20" height="20"/>
+                        <text x="45" y="23" fill="#e4e4e7" font-size="11" font-weight="bold" font-family="sans-serif">SRE App 03</text>
+                        <text x="45" y="36" fill="#a1a1aa" font-size="9" font-family="monospace">Go Payload</text>
+                    </g>
+
+                    <path d="M 485 305 L 485 325 L 875 325 L 875 305" fill="none" stroke="#52525b" stroke-width="1.5"/>
+                    <path d="M 680 305 L 680 325" fill="none" stroke="#52525b" stroke-width="1.5"/>
+                    <path d="M 600 325 L 600 340" fill="none" stroke="#52525b" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+                    <g transform="translate(530, 345)">
+                        <rect width="140" height="40" rx="6" fill="#18181b" stroke="#27272a"/>
+                        <image href="https://cdn.simpleicons.org/redis" x="15" y="10" width="20" height="20"/>
+                        <text x="45" y="24" fill="#f59e0b" font-size="11" font-weight="bold" font-family="sans-serif">Redis Cache DB</text>
+                    </g>
+                    
+                    <g transform="translate(220, 345)">
+                        <rect width="140" height="40" rx="6" fill="#18181b" stroke="#27272a"/>
+                        <svg x="15" y="8" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.66 0 3-4.03 3-9s-1.34-9-3-9m0 18c-1.66 0-3-4.03-3-9s1.34-9 3-9m-9 9a9 9 0 0 1 9-9"></path></svg>
+                        <text x="50" y="24" fill="#8b5cf6" font-size="11" font-weight="bold" font-family="sans-serif">cAdvisor/Prom</text>
+                    </g>
+                </svg>
+            </div>
+        </section>
+
+        <!-- GRID DE DADOS INTERATIVO (Visão K3s/Rancher) -->
+        <div class="w-full grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Painel Estático Base -->
+            <div class="bg-panel p-6 rounded-xl border border-borderMuted flex flex-col justify-between shadow-lg">
+                <div>
+                    <h3 class="text-[10px] uppercase tracking-widest text-textMuted mb-2 font-mono">Gateway que Atendeu esta Tela</h3>
+                    <p class="text-xl font-mono text-white font-semibold break-words">{{.Hostname}}</p>
                 </div>
-                
-                {{if .RedisIsDown}}
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-900/50 text-red-400 text-xs font-medium border border-red-800">
-                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
-                        {{.RedisStatus}}
+                <div class="mt-6 pt-4 border-t border-borderMuted">
+                    <h3 class="text-[10px] uppercase tracking-widest text-textMuted mb-2 font-mono">Chaves Gravadas no Redis</h3>
+                    <div class="flex items-baseline gap-2">
+                        <span class="text-4xl font-bold text-brand tracking-tight" id="cacheCounter">{{.Visits}}</span>
+                        <span class="text-xs text-textMuted font-mono">operações I/O</span>
                     </div>
-                {{else}}
-                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-900/50 text-emerald-400 text-xs font-medium border border-emerald-800">
-                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
-                        {{.RedisStatus}}
-                    </div>
-                {{end}}
-            </div>
-        </div>
-
-        <!-- NOVO PAINEL DE TELEMETRIA -->
-        <div class="bg-dark p-6 rounded-xl border border-gray-700 shadow-lg mb-8">
-            <h2 class="text-sm uppercase tracking-wider text-gray-400 mb-4 flex items-center gap-2">
-                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
-                Telemetria do Kernel (Runtime)
-            </h2>
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div class="bg-darker rounded-lg p-3 border border-gray-800">
-                    <p class="text-xs text-gray-500 uppercase">OS / Architecture</p>
-                    <p class="text-md font-mono text-gray-300 mt-1">{{.OSArchitecture}}</p>
-                </div>
-                <div class="bg-darker rounded-lg p-3 border border-gray-800">
-                    <p class="text-xs text-gray-500 uppercase">CPU Cores Ativos</p>
-                    <p class="text-md font-mono text-gray-300 mt-1">{{.CPUCores}} vCPUs</p>
-                </div>
-                <div class="bg-darker rounded-lg p-3 border border-gray-800 md:col-span-1 col-span-2">
-                    <p class="text-xs text-gray-500 uppercase">Compilador</p>
-                    <p class="text-md font-mono text-gray-300 mt-1">{{.GoVersion}}</p>
                 </div>
             </div>
-        </div>
 
-        <div class="bg-dark p-6 rounded-xl border border-gray-700 shadow-lg">
-            <h2 class="text-lg font-semibold text-white mb-4">Painel de Estresse (Chaos Engineering)</h2>
-            <p class="text-sm text-gray-400 mb-6">
-                Como um SRE, você não apenas reza para a aplicação funcionar. Você testa a quebra dela. Clique no botão abaixo para gerar picos de latência ou erros 500 propositais. Assista os gráficos do Prometheus/Grafana reagirem.
-            </p>
-            
-            <div class="flex flex-wrap gap-4">
-                <a href="/chaos" target="_blank" class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors flex items-center gap-2 shadow-lg shadow-red-900/20">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    Injetar Caos (Latência/500)
-                </a>
+            <!-- Painel de Pods Interativo (Substitui os "Círculos Vagos" por Controle Direto) -->
+            <div class="bg-panel p-6 rounded-xl border border-borderMuted shadow-lg lg:col-span-2 flex flex-col">
+                <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 gap-4 border-b border-borderMuted pb-4">
+                    <h3 class="text-[11px] uppercase tracking-widest text-textMuted font-bold">Containers Operantes (Visão Nível POD)</h3>
+                    <span class="text-[10px] font-mono text-emerald-400 bg-emerald-400/10 px-3 py-1 rounded-full border border-emerald-400/20 shadow-inner" id="activeNodesCount">Iniciando Sonda...</span>
+                </div>
                 
-                <a href="/metrics" target="_blank" class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors flex items-center gap-2 border border-gray-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                    Ver Raw Metrics
-                </a>
+                <!-- A Matriz de Pods -->
+                <div id="clusterGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4 flex-1">
+                    <div class="col-span-3 h-16 border border-borderMuted border-dashed rounded-lg flex items-center justify-center text-textMuted text-xs font-mono">Conectando ao Socket Docker...</div>
+                </div>
 
-                <button onclick="window.location.reload()" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors ml-auto">
-                    Refresh Page
-                </button>
+                <!-- Painel Tátil SRE (Agora na tela principal!) -->
+                <div class="mt-6 pt-4 border-t border-borderMuted flex justify-end gap-3">
+                    <button onclick="injectTraffic(this)" class="px-4 py-2 bg-borderMuted hover:bg-gray-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-2 border border-gray-600">
+                        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Gerar Tráfego (HTTP 200)
+                    </button>
+                    <button onclick="injectChaos(this)" class="px-4 py-2 bg-brand/10 hover:bg-brand/20 text-brand text-xs font-bold rounded-lg transition-colors flex items-center gap-2 border border-brand/50 shadow-lg shadow-brand/10">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        Injetar Falha Crítica (HTTP 500)
+                    </button>
+                </div>
             </div>
         </div>
 
-        <div class="text-center mt-8 text-xs text-gray-600 font-mono">
-            Último processamento: {{.LastPingTime}} | Desenvolvido por Edi (SRE Mode)
+        <div class="w-full flex flex-col md:flex-row gap-6 mb-12">
+            <a href="/visual-dashboard" class="flex-1 bg-brand hover:bg-brandDark text-white px-6 py-5 rounded-xl font-bold transition-all flex justify-between items-center shadow-lg shadow-brand/20 group hover:-translate-y-1">
+                ABRIR NOC (GRÁFICOS HISTÓRICOS DE TELEMETRIA)
+                <svg class="w-6 h-6 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </a>
+            <div class="flex-1 bg-panel border border-borderMuted rounded-xl px-6 py-5 flex items-center justify-between">
+                <div class="text-xs text-textMuted font-mono">AUTORIA DO DEPLOY</div>
+                <div class="text-sm font-bold text-white uppercase bg-bgBase px-3 py-1 rounded border border-borderMuted shadow-inner">{{.AppAuthor}}</div>
+            </div>
         </div>
     </div>
+
+    <!-- MÁQUINA DE LÓGICA RANCHER STYLE -->
+    <script>
+        const prometheusBase = window.location.hostname.includes('localhost') ? 'http://localhost:9090' : '/prometheus';
+
+        // Botões SRE Táteis
+        function injectTraffic(btn) {
+            btn.classList.add('opacity-50', 'scale-95');
+            for(let i=0; i<15; i++) { fetch('/').catch(()=>{}); }
+            setTimeout(() => btn.classList.remove('opacity-50', 'scale-95'), 500);
+        }
+
+        function injectChaos(btn) {
+            btn.classList.add('opacity-50', 'scale-95', 'bg-brand', 'text-white');
+            for(let i=0; i<15; i++) { fetch('/chaos').catch(()=>{}); }
+            setTimeout(() => btn.classList.remove('opacity-50', 'scale-95', 'bg-brand', 'text-white'), 1000);
+        }
+
+        async function renderClusterStatus() {
+            const grid = document.getElementById('clusterGrid');
+            const counter = document.getElementById('activeNodesCount');
+            
+            try {
+                // A grande jogada: Usamos 'up' para mapear quem está VIVO, independente de ter tráfego na porta!
+                const resUp = await fetch(`${prometheusBase}/api/v1/query?query=up{job="docker-discovery"}`);
+                const dataUp = await resUp.json();
+
+                // Pegamos o tráfego HTTP para popular os cards com RPS/Erros (se houver)
+                const resHttp = await fetch(`${prometheusBase}/api/v1/query?query=sum(rate(http_requests_total[15s])) by (container_name, status)`);
+                const dataHttp = await resHttp.json();
+                
+                if(dataUp.data && dataUp.data.result && dataUp.data.result.length > 0) {
+                    grid.innerHTML = '';
+                    counter.innerText = `${dataUp.data.result.length} Pod(s) Resilientes (UP)`;
+                    
+                    dataUp.data.result.forEach((metric) => {
+                        const isUp = metric.value[1] === "1";
+                        let rawName = metric.metric.container_name || "Unknown";
+                        let cleanName = rawName.includes('-sre-app-') ? rawName.split('-sre-app-')[1] : rawName;
+                        
+                        let rps200 = 0;
+                        let rps500 = 0;
+
+                        // Cruze os dados de status com o tráfego
+                        if(dataHttp.data && dataHttp.data.result) {
+                            dataHttp.data.result.forEach(reqMetric => {
+                                if(reqMetric.metric.container_name === rawName) {
+                                    if(reqMetric.metric.status === "200") rps200 = parseFloat(reqMetric.value[1]);
+                                    if(reqMetric.metric.status === "500") rps500 = parseFloat(reqMetric.value[1]);
+                                }
+                            });
+                        }
+
+                        let totalLoad = rps200 + rps500;
+                        let borderColor = rps500 > 0.5 ? 'border-brand' : 'border-borderMuted';
+                        let glowClass = totalLoad > 2 ? 'shadow-[0_0_15px_rgba(16,185,129,0.1)] border-emerald-900/50' : '';
+                        if (rps500 > 0.5) glowClass = 'shadow-[0_0_15px_rgba(237,20,91,0.2)] border-brand/50';
+
+                        grid.innerHTML += `
+                            <div class="bg-bgBase border ${borderColor} ${glowClass} rounded-lg p-4 flex flex-col justify-between transition-all duration-300">
+                                <div class="flex justify-between items-center mb-4">
+                                    <div class="flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16.5c0 .38-.21.71-.53.88l-7.9 4.44c-.16.12-.36.18-.57.18-.21 0-.41-.06-.57-.18l-7.9-4.44A.991.991 0 0 1 3 16.5v-9c0-.38.21-.71.53-.88l7.9-4.44c.16-.12.36-.18.57-.18.21 0 .41.06.57.18l7.9 4.44c.32.17.53.5.53.88v9M12 4.15L6.04 7.5 12 10.85l5.96-3.35L12 4.15M5 15.91l6 3.38v-6.71L5 9.19v6.72m14 0v-6.72l-6 3.39v6.71l6-3.38z"/></svg>
+                                        <span class="text-xs font-mono font-bold text-white">${cleanName}</span>
+                                    </div>
+                                    <span class="text-[9px] px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 uppercase font-bold tracking-widest">Running</span>
+                                </div>
+                                <div class="flex flex-col gap-1.5 border-t border-borderMuted pt-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-[10px] text-gray-500 font-mono">Req Sucesso (200)</span>
+                                        <span class="text-[11px] text-emerald-400 font-bold font-mono">${rps200.toFixed(1)}/s</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-[10px] text-gray-500 font-mono">Falhas Críticas (500)</span>
+                                        <span class="text-[11px] ${rps500 > 0.5 ? 'text-brand' : 'text-gray-400'} font-bold font-mono">${rps500.toFixed(1)}/s</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    counter.innerText = "0 Pods Encontrados";
+                    grid.innerHTML = `<div class="col-span-3 p-4 border border-borderMuted border-dashed rounded-lg text-textMuted text-xs font-mono text-center">Nenhum container captado pela sonda do Docker.</div>`;
+                }
+            } catch (e) {}
+        }
+        
+        // Varredura ultra-rápida L4 (A cada 1.5s)
+        setInterval(renderClusterStatus, 1500);
+        renderClusterStatus();
+    </script>
 </body>
 </html>

@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -16,34 +18,29 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// --- 1. DEFINIÇÃO DAS MÉTRICAS (PROMETHEUS) ---
-// SRE sem métrica é só um cara com achismos.
 var (
 	httpRequestsTotal = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "http_requests_total",
-			Help: "Total de requisições HTTP processadas, separadas por status.",
+			Help: "Total de requisições HTTP processadas.",
 		},
-		[]string{"status"},
+		[]string{"status", "container_id"},
 	)
 	httpDuration = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Name:    "http_request_duration_seconds",
 			Help:    "Latência das requisições HTTP.",
-			Buckets: []float64{0.1, 0.5, 1, 2, 5}, // Buckets de tempo em segundos
+			Buckets: []float64{0.1, 0.5, 1, 2, 5},
 		},
-		[]string{"handler"},
+		[]string{"handler", "container_id"},
 	)
 )
 
 func init() {
-	// Registra as métricas no Prometheus local
 	prometheus.MustRegister(httpRequestsTotal)
 	prometheus.MustRegister(httpDuration)
 }
 
-// --- 2. ESTRUTURA DE DADOS PARA O FRONTEND ---
-// O que vamos mandar para o nosso HTML renderizar
 type PageData struct {
 	Hostname       string
 	Visits         string
@@ -53,14 +50,13 @@ type PageData struct {
 	OSArchitecture string
 	GoVersion      string
 	CPUCores       int
+	PipelineCode   string // NOVO
+	AppAuthor      string // NOVO
 }
 
-// Cliente global do Redis
 var rdb *redis.Client
 
 func main() {
-	// Pega a URL do Redis via variável de ambiente (Docker injeta isso depois)
-	// Se não tiver, tenta o localhost (para seus testes locais)
 	redisAddr := os.Getenv("REDIS_ADDR")
 	if redisAddr == "" {
 		redisAddr = "localhost:6379"
@@ -68,27 +64,35 @@ func main() {
 
 	rdb = redis.NewClient(&redis.Options{
 		Addr:        redisAddr,
-		Password:    "", // Sem senha para o laboratório
+		Password:    "",
 		DB:          0,
-		DialTimeout: 50 * time.Millisecond, // SRE Rule: Fail Fast! Se demorar > 50ms para conectar, desiste.
+		DialTimeout: 50 * time.Millisecond,
 		ReadTimeout: 50 * time.Millisecond,
 	})
 
-	// Roteamento
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/chaos", chaosHandler)
-	http.Handle("/metrics", promhttp.Handler()) // Endpoint sagrado do Prometheus
+	http.HandleFunc("/visual-dashboard", dashboardHandler)
+	// proxy endpoint to allow browser JS to talk to Prometheus without CORS or path-prefix problems
+	http.HandleFunc("/prometheus/", prometheusProxy)
+	http.Handle("/metrics", promhttp.Handler())
 
 	porta := "3000"
 	fmt.Printf("🚀 [SRE App] Subindo na porta %s...\n", porta)
 	log.Fatal(http.ListenAndServe(":"+porta, nil))
 }
 
-// --- 3. HANDLERS (A Lógica de Negócio e Falha) ---
+func dashboardHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("templates/dashboard.html")
+	if err != nil {
+		http.Error(w, "Erro ao carregar o dashboard HTML.", http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	// Ignora requisições de favicon para não sujar nossas métricas
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
@@ -97,65 +101,96 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 	hostname, _ := os.Hostname()
 	ctx := context.Background()
 
-	// Tenta incrementar no Redis (Nosso ponto de falha potencial)
 	visits := "0"
 	redisStatus := "Online"
 	redisIsDown := false
 
 	val, err := rdb.Incr(ctx, "contador_visitas").Result()
 	if err != nil {
-		// Graceful Degradation: O banco caiu? O app continua de pé.
 		redisStatus = "Offline (Graceful Degradation Ativo)"
-		visits = "Erro ao ler cache"
+		visits = "Erro Cache"
 		redisIsDown = true
-		fmt.Printf("⚠️ [Alerta] Falha no Redis: %v\n", err)
 	} else {
 		visits = fmt.Sprintf("%d", val)
 	}
 
-	// Prepara os dados pro HTML
+	// Lendo a Pipeline do disco
+	pipelineBytes, err := os.ReadFile("pipeline.yml")
+	pipelineCode := "Código da pipeline em processamento..."
+	if err == nil {
+		pipelineCode = string(pipelineBytes)
+	}
+
+	// Lendo o Autor do Build
+	author := os.Getenv("APP_AUTHOR")
+	if author == "" {
+		author = "Edi (Pipeline Local)"
+	}
+
 	data := PageData{
 		Hostname:       hostname,
 		Visits:         visits,
 		RedisStatus:    redisStatus,
 		RedisIsDown:    redisIsDown,
-		LastPingTime:   time.Now().Format("15:04:05.000"),
+		LastPingTime:   time.Now().Format("15:04:05"),
 		OSArchitecture: runtime.GOOS + " / " + runtime.GOARCH,
 		GoVersion:      runtime.Version(),
 		CPUCores:       runtime.NumCPU(),
+		PipelineCode:   pipelineCode,
+		AppAuthor:      author,
 	}
 
-	// Renderiza o HTML
-	tmpl, err := template.ParseFiles("templates/index.html")
-	if err != nil {
-		http.Error(w, "Erro ao carregar o template HTML. Arquivo templates/index.html existe?", http.StatusInternalServerError)
-		return
-	}
-
+	tmpl, _ := template.ParseFiles("templates/index.html")
 	tmpl.Execute(w, data)
 
-	// Registra métrica de sucesso (HTTP 200) e latência
-	httpRequestsTotal.WithLabelValues("200").Inc()
-	httpDuration.WithLabelValues("home").Observe(time.Since(start).Seconds())
+	httpRequestsTotal.WithLabelValues("200", hostname).Inc()
+	httpDuration.WithLabelValues("home", hostname).Observe(time.Since(start).Seconds())
 }
 
 func chaosHandler(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-
-	// Simula um "Gargalo de Processamento" ou I/O travado
+	hostname, _ := os.Hostname()
 	delay := time.Duration(rand.Intn(3)+1) * time.Second
-	fmt.Printf("🔥 [CAOS] Injetando latência de %v...\n", delay)
 	time.Sleep(delay)
 
-	// Simula um erro 500 aleatório (Bug de compatibilidade no código)
 	if rand.Float32() > 0.5 {
-		httpRequestsTotal.WithLabelValues("500").Inc()
-		httpDuration.WithLabelValues("chaos").Observe(time.Since(start).Seconds())
-		http.Error(w, "💥 BOOM! Erro 500 Injetado pelo Engenheiro do Caos.", http.StatusInternalServerError)
+		httpRequestsTotal.WithLabelValues("500", hostname).Inc()
+		httpDuration.WithLabelValues("chaos", hostname).Observe(time.Since(start).Seconds())
+		http.Error(w, "💥 BOOM! Erro 500.", http.StatusInternalServerError)
 		return
 	}
 
-	httpRequestsTotal.WithLabelValues("200").Inc()
-	httpDuration.WithLabelValues("chaos").Observe(time.Since(start).Seconds())
-	fmt.Fprintf(w, "Latência de %v injetada com sucesso, mas sobrevivemos (HTTP 200). Volte para a home.", delay)
+	httpRequestsTotal.WithLabelValues("200", hostname).Inc()
+	httpDuration.WithLabelValues("chaos", hostname).Observe(time.Since(start).Seconds())
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, `{"status": "success", "delay_injetado": "%v"}`, delay)
+}
+
+// prometheusProxy forwards any request from /prometheus/* to the actual Prometheus instance.
+// The target address is taken from PROM_ADDR env var (default prom/prometheus container service).
+func prometheusProxy(w http.ResponseWriter, r *http.Request) {
+	target := os.Getenv("PROM_ADDR")
+	if target == "" {
+		// inside compose use service name
+		target = "http://prometheus:9090"
+	}
+	// construct proxied URL
+	proxied := target + strings.TrimPrefix(r.URL.Path, "/prometheus")
+	if r.URL.RawQuery != "" {
+		proxied += "?" + r.URL.RawQuery
+	}
+	resp, err := http.Get(proxied)
+	if err != nil {
+		http.Error(w, "Proxy error: "+err.Error(), http.StatusBadGateway)
+		return
+	}
+	defer resp.Body.Close()
+	// copy status and headers
+	for k, vals := range resp.Header {
+		for _, v := range vals {
+			w.Header().Add(k, v)
+		}
+	}
+	w.WriteHeader(resp.StatusCode)
+	io.Copy(w, resp.Body)
 }
